@@ -79,35 +79,34 @@ class PPIPNMessage
     {
         if (isset($this->isIpnVerified)) {
             return $this->isIpnVerified;
-        } else {
-            $request = self::IPN_CMD;
-            if (function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc() == 1) {
-                $get_magic_quotes_exists = true;
-            } else {
-                $get_magic_quotes_exists = false;
-            }
-            foreach ($this->ipnData as $key => $value) {
-                if ($get_magic_quotes_exists) {
-                    $value = urlencode(stripslashes($value));
-                } else {
-                    $value = urlencode($value);
-                }
-                $request .= "&$key=$value";
-            }
-
-            $httpConfig = new PPHttpConfig($this->setEndpoint());
-            $httpConfig->addCurlOption(CURLOPT_FORBID_REUSE, 1);
-            $httpConfig->addCurlOption(CURLOPT_HTTPHEADER, array('Connection: Close'));
-
-            $connection = PPConnectionManager::getInstance()->getConnection($httpConfig, $this->config);
-            $response   = $connection->execute($request);
-            if ($response == 'VERIFIED') {
-                $this->isIpnVerified = true;
-                return true;
-            }
-            $this->isIpnVerified = false;
-            return false; // value is 'INVALID'
         }
+
+	$httpConfig = new PPHttpConfig($this->setEndpoint());
+        $httpConfig->addCurlOption(CURLOPT_FORBID_REUSE, 1);
+        $httpConfig->addCurlOption(CURLOPT_HTTPHEADER, array(
+            'Connection: Close',
+            'Content-Type: application/x-www-form-urlencoded'
+        ));
+
+        // Prepare the request data as an associative array instead of string concatenation
+        $requestData = array(
+            'cmd' => '_notify-validate'
+        );
+        
+        // Add all IPN data to the request parameters
+        foreach ($this->ipnData as $key => $value) {
+            $requestData[$key] = $value;
+        }
+        
+        $connection = PPConnectionManager::getInstance()->getConnection($httpConfig, $this->config);
+        $response = $connection->execute(http_build_query($requestData));
+        
+        if ($response == 'VERIFIED') {
+            $this->isIpnVerified = true;
+            return true;
+        }
+        $this->isIpnVerified = false;
+        return false; // value is 'INVALID'
     }
 
     /**
