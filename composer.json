@@ -1,5 +1,5 @@
 {
-    "name": "paypal/sdk-core-php",
+    "name": "amboss-mededu/sdk-core-php",
     "description": "PayPal Core SDK for PHP",
     "keywords": ["paypal", "php", "sdk"],
     "type": "library",
@@ -22,5 +22,8 @@
         "psr-0": {
             "PayPal": "lib/"
         }
+    },
+    "replace": {
+        "paypal/sdk-core-php": "^3.4"
     }
 }
